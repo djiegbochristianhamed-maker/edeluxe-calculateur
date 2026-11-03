@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EDELUXE – Calculateur de prix</title>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--ink:#14213d;--mute:#5b6781;--line:#d9dfec;--accent:#0b5fff;--gain:#0a7a4b;--loss:#b3261e;--soft:#e8efff}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1424;--card:#171f35;--ink:#eef1fa;--mute:#9aa6c4;--line:#2a3555;--accent:#5b8dff;--gain:#4cd08d;--loss:#ff7b72;--soft:#1f2c52}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px 14px 40px}
+.wrap{max-width:560px;margin:0 auto}
+h1{font-size:1.35rem;margin:6px 0 2px}
+.sub{color:var(--mute);font-size:.9rem;margin:0 0 14px}
+.tabs{display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:12px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:transparent;color:var(--ink);padding:11px 6px;border-radius:9px;font:inherit;font-weight:600;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:1rem;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+label{display:block;font-size:.82rem;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.75rem;color:var(--mute);margin-top:2px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:0}
+.row span:first-child{color:var(--mute)}
+.row b{text-align:right}
+.big{background:var(--soft);border-radius:12px;padding:14px;margin-bottom:8px;text-align:center}
+.big small{display:block;color:var(--mute);font-size:.82rem}
+.big strong{font-size:1.9rem;color:var(--accent)}
+.gain{color:var(--gain)}.loss{color:var(--loss)}
+.btn{width:100%;padding:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer;margin-top:8px}
+.note{font-size:.8rem;color:var(--mute);margin-top:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Calculateur de prix de revente</h1>
+  <p class="sub">EDELUXE Boutique · montants en FCFA</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabB" aria-selected="true">Boutique</button>
+    <button role="tab" id="tabP" aria-selected="false">Précommande</button>
+  </div>
+
+  <div class="card">
+    <label for="nom">Nom du produit (facultatif)</label>
+    <input id="nom" type="text" placeholder="Ex : Rallonge multiprise 5 m">
+  </div>
+
+  <!-- BOUTIQUE -->
+  <section id="modeB">
+    <div class="card">
+      <h2>Coûts (stock local)</h2>
+      <div class="grid">
+        <div><label for="b_achat">Prix d'achat unitaire</label><input id="b_achat" type="number" inputmode="decimal" min="0"></div>
+        <div><label for="b_qte">Quantité achetée</label><input id="b_qte" type="number" inputmode="decimal" min="1" value="1"></div>
+        <div><label for="b_transport">Transport (total lot)</label><input id="b_transport" type="number" inputmode="decimal" min="0" value="0"></div>
+        <div><label for="b_autres">Autres frais (total lot)</label><input id="b_autres" type="number" inputmode="decimal" min="0" value="0"></div>
+        <div><label for="b_livraison">Livraison offerte / unité</label><input id="b_livraison" type="number" inputmode="decimal" min="0" value="0"><div class="hint">0 si le client paie la livraison</div></div>
+        <div><label for="b_pertes">Pertes / casse (%)</label><input id="b_pertes" type="number" inputmode="decimal" min="0" value="0"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Marge visée</h2>
+      <div class="grid">
+        <div><label for="b_marge">Marge sur le coût (%)</label><input id="b_marge" type="number" inputmode="decimal" min="0" value="45"></div>
+        <div><label for="b_arrondi">Arrondir le prix à</label>
+          <select id="b_arrondi"><option value="0">Pas d'arrondi</option><option value="50">50 F</option><option value="100">100 F</option><option value="250">250 F</option><option value="500" selected>500 F</option></select></div>
+      </div>
+    </div>
+    <div class="card" id="resB"></div>
+  </section>
+
+  <!-- PRECOMMANDE -->
+  <section id="modeP" class="hidden">
+    <div class="card">
+      <h2>Achat à l'étranger</h2>
+      <div class="grid">
+        <div><label for="p_achat">Prix d'achat unitaire (devise)</label><input id="p_achat" type="number" inputmode="decimal" min="0"></div>
+        <div><label for="p_devise">Devise</label><select id="p_devise"><option>USD</option><option>EUR</option><option>CNY</option><option>AED</option></select></div>
+        <div><label for="p_taux">Taux : 1 devise = … FCFA</label><input id="p_taux" type="number" inputmode="decimal" min="0"><div class="hint">À vérifier le jour de l'achat</div></div>
+        <div><label for="p_qte">Quantité commandée</label><input id="p_qte" type="number" inputmode="decimal" min="1" value="1"></div>
+        <div><label for="p_change">Réserve risque de change (%)</label><input id="p_change" type="number" inputmode="decimal" min="0" value="3"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Frais d'importation</h2>
+      <div class="grid">
+        <div><label for="p_fret">Fret / transport (total lot, FCFA)</label><input id="p_fret" type="number" inputmode="decimal" min="0" value="0"></div>
+        <div><label for="p_reserve">Réserve fret (%)</label><input id="p_reserve" type="number" inputmode="decimal" min="0" value="10"><div class="hint">Prévoit une hausse du fret</div></div>
+        <div><label for="p_douane">Douane (% de la valeur d'achat)</label><input id="p_douane" type="number" inputmode="decimal" min="0" value="20"><div class="hint">Taux à ajuster selon le produit</div></div>
+        <div><label for="p_transit">Transit / autres frais (total lot)</label><input id="p_transit" type="number" inputmode="decimal" min="0" value="0"></div>
+        <div><label for="p_livraison">Livraison offerte / unité</label><input id="p_livraison" type="number" inputmode="decimal" min="0" value="0"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Marge et avance</h2>
+      <div class="grid">
+        <div><label for="p_marge">Marge sur le coût (%)</label><input id="p_marge" type="number" inputmode="decimal" min="0" value="45"></div>
+        <div><label for="p_avance">Avance Wave (%)</label><input id="p_avance" type="number" inputmode="decimal" min="0" max="100" value="50"></div>
+        <div class="full"><label for="p_arrondi">Arrondir le prix à</label>
+          <select id="p_arrondi"><option value="0">Pas d'arrondi</option><option value="50">50 F</option><option value="100">100 F</option><option value="250">250 F</option><option value="500" selected>500 F</option></select></div>
+      </div>
+    </div>
+    <div class="card" id="resP"></div>
+  </section>
+
+  <div class="card" id="cmp"></div>
+  <button class="btn" id="reset">Tout réinitialiser</button>
+  <p class="note">Les valeurs par défaut (marge, douane, change, avance) sont des exemples : modifiez-les selon vos habitudes. Vos saisies restent enregistrées sur cet appareil.</p>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var ids=["nom","b_achat","b_qte","b_transport","b_autres","b_livraison","b_pertes","b_marge","b_arrondi",
+           "p_achat","p_devise","p_taux","p_qte","p_change","p_fret","p_reserve","p_douane","p_transit","p_livraison","p_marge","p_avance","p_arrondi"];
+  var defaults={};
+  ids.forEach(function(i){defaults[i]=$(i).value});
+  var KEY="edeluxe_calc_v2";
+
+  function fmt(n){return isFinite(n)?Math.round(n).toLocaleString("fr-FR").replace(/\u202f/g," ")+" F":"—"}
+  function num(i){var v=parseFloat($(i).value);return isFinite(v)&&v>=0?v:0}
+  function roundUp(p,s){return s>0?Math.ceil(p/s)*s:Math.round(p)}
+  function row(l,v,c){return '<div class="row"><span>'+l+'</span><b'+(c?' class="'+c+'"':'')+'>'+v+'</b></div>'}
+
+  function calcB(){
+    var q=Math.max(num("b_qte"),1), achat=num("b_achat");
+    if(!achat)return null;
+    var total=achat*q+num("b_transport")+num("b_autres");
+    var vendables=q*(1-Math.min(num("b_pertes"),99)/100);
+    var cout=total/vendables+num("b_livraison");
+    var prix=roundUp(cout*(1+num("b_marge")/100),num("b_arrondi"));
+    return {total:total,cout:cout,prix:prix,benef:prix-cout,benefTot:(prix-cout)*vendables,min:Math.ceil(cout),pct:(prix-cout)/prix*100};
+  }
+  function calcP(){
+    var q=Math.max(num("p_qte"),1), achat=num("p_achat"), taux=num("p_taux");
+    if(!achat||!taux)return null;
+    var valeur=achat*q*taux*(1+num("p_change")/100);
+    var douane=valeur*num("p_douane")/100;
+    var total=valeur+douane+num("p_fret")*(1+num("p_reserve")/100)+num("p_transit");
+    var cout=total/q+num("p_livraison");
+    var prix=roundUp(cout*(1+num("p_marge")/100),num("p_arrondi"));
+    var av=prix*Math.min(num("p_avance"),100)/100;
+    return {valeur:valeur,douane:douane,total:total,cout:cout,prix:prix,benef:prix-cout,benefTot:(prix-cout)*q,min:Math.ceil(cout),avance:av,solde:prix-av,pct:(prix-cout)/prix*100};
+  }
+  function empty(t){return '<h2>Résultat</h2><p class="note" style="margin:0">'+t+'</p>'}
+  function big(p){return '<div class="big"><small>Prix de revente conseillé</small><strong>'+fmt(p)+'</strong></div>'}
+
+  function render(){
+    var b=calcB(), p=calcP();
+    $("resB").innerHTML=!b?empty("Saisissez le prix d'achat pour voir le résultat."):
+      big(b.prix)+row("Coût de revient / unité",fmt(b.cout))+row("Prix minimum (sans perte)",fmt(b.min))+
+      row("Bénéfice / unité",fmt(b.benef),b.benef>=0?"gain":"loss")+row("Bénéfice total estimé",fmt(b.benefTot),b.benefTot>=0?"gain":"loss")+
+      row("Marge réelle sur le prix",b.pct.toFixed(1)+" %");
+    $("resP").innerHTML=!p?empty("Saisissez le prix d'achat et le taux de change pour voir le résultat."):
+      big(p.prix)+row("Valeur d'achat (change inclus)",fmt(p.valeur))+row("Douane estimée",fmt(p.douane))+
+      row("Coût de revient / unité",fmt(p.cout))+row("Prix minimum (sans perte)",fmt(p.min))+
+      row("Bénéfice / unité",fmt(p.benef),p.benef>=0?"gain":"loss")+row("Bénéfice total estimé",fmt(p.benefTot),p.benefTot>=0?"gain":"loss")+
+      row("Avance Wave à demander",fmt(p.avance))+row("Solde à la livraison",fmt(p.solde));
+    var h='<h2>Comparaison Boutique / Précommande</h2>';
+    if(!b||!p){h+='<p class="note" style="margin:0">Remplissez les deux modes pour comparer le même produit.</p>'}
+    else{
+      var d=p.prix-b.prix;
+      h+=row("Prix boutique (stock local)",fmt(b.prix))+row("Prix précommande (import)",fmt(p.prix))+
+         row("Bénéfice / unité · Boutique",fmt(b.benef))+row("Bénéfice / unité · Précommande",fmt(p.benef));
+      var best=p.benef>b.benef?"Précommande":(b.benef>p.benef?"Boutique":"Égalité");
+      h+=row("Meilleur bénéfice par unité",best,"gain");
+      if(d<0)h+='<p class="note">Attention : le prix précommande est inférieur de '+fmt(-d)+' au prix boutique. Vérifiez vos coûts d\'import.</p>';
+      else if(d>0)h+='<p class="note">Le prix précommande dépasse le prix boutique de '+fmt(d)+' : le client doit y voir un intérêt (produit introuvable, qualité).</p>';
+    }
+    $("cmp").innerHTML=h;
+  }
+
+  function save(){var o={};ids.forEach(function(i){o[i]=$(i).value});try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+  function load(){try{var o=JSON.parse(localStorage.getItem(KEY)||"null");if(o)ids.forEach(function(i){if(o[i]!=null)$(i).value=o[i]})}catch(e){}}
+
+  function mode(m){
+    var b=m==="B";
+    $("modeB").classList.toggle("hidden",!b);$("modeP").classList.toggle("hidden",b);
+    $("tabB").setAttribute("aria-selected",b);$("tabP").setAttribute("aria-selected",!b);
+  }
+  $("tabB").onclick=function(){mode("B")};
+  $("tabP").onclick=function(){mode("P")};
+  ids.forEach(function(i){$(i).addEventListener("input",function(){save();render()});$(i).addEventListener("change",function(){save();render()})});
+  $("reset").onclick=function(){if(confirm("Effacer toutes les saisies ?")){ids.forEach(function(i){$(i).value=defaults[i]});save();render()}};
+
+  load();render();
+})();
+</script>
+</body>
+</html>
